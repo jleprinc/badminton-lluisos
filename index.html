@@ -95,11 +95,7 @@
   .session-time { font-size: 0.95rem; font-weight: 500; color: var(--ink); }
   .session-others { font-size: 0.8rem; color: var(--ink3); margin-top: 2px; }
   .session-badge { font-size: 0.7rem; padding: 3px 8px; background: var(--green-light); color: var(--green); border-radius: 20px; font-weight: 500; white-space: nowrap; }
-  .ics-box { display: none; margin-top: 1rem; background: var(--green-pale); border: 1.5px solid var(--border); border-radius: 12px; padding: 1rem; }
-  .ics-box p { font-size: 0.8rem; color: var(--ink3); margin-bottom: 0.5rem; }
-  .ics-box textarea { width: 100%; height: 80px; font-family: monospace; font-size: 0.7rem; border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; color: var(--ink2); background: white; resize: none; outline: none; }
-  .ics-copy-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-  .ics-copy-row .copied { font-size: 0.8rem; color: var(--green); opacity: 0; transition: opacity 0.3s; }
+
   .back-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--ink3); font-size: 0.85rem; cursor: pointer; margin-bottom: 1.25rem; background: none; border: none; padding: 0; font-family: 'DM Sans', sans-serif; }
   .back-btn:hover { color: var(--green); }
   footer { text-align: center; padding: 2rem; color: var(--ink3); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 2rem; }
@@ -158,18 +154,10 @@
       <p id="p-count"></p>
     </div>
     <div class="header-actions">
-      <button class="btn btn-primary" onclick="showIcs()">
+      <button class="btn btn-primary" onclick="downloadIcs()">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 10V1M5 7l3 3 3-3M2 12v1a2 2 0 002 2h8a2 2 0 002-2v-1"/></svg>
         Descarregar .ics
       </button>
-    </div>
-  </div>
-  <div class="ics-box" id="ics-box">
-    <p>Copia el text, enganxa'l al bloc de notes, desa'l com <strong>badminton.ics</strong> i obre'l per importar al teu calendari (Google Calendar, Apple Calendar, Outlook…).</p>
-    <textarea id="ics-text" readonly></textarea>
-    <div class="ics-copy-row">
-      <button class="btn btn-secondary" onclick="copyIcs()">Copiar al porta-retalls</button>
-      <span class="copied" id="copied-msg">Copiat!</span>
     </div>
   </div>
   <div id="session-list"></div>
@@ -300,7 +288,6 @@ function selectPlayer(name) {
   renderPanel(name);
   document.getElementById('picker-screen').style.display = 'none';
   document.getElementById('cal-panel').style.display = 'block';
-  document.getElementById('ics-box').style.display = 'none';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -370,23 +357,15 @@ function buildIcs(name) {
   return ics + 'END:VCALENDAR';
 }
 
-function showIcs() {
-  document.getElementById('ics-text').value = buildIcs(currentPlayer);
-  const box = document.getElementById('ics-box');
-  box.style.display = box.style.display === 'block' ? 'none' : 'block';
-}
-
-function copyIcs() {
-  const ta = document.getElementById('ics-text');
-  const fb = document.getElementById('copied-msg');
-  const showCopied = () => { fb.style.opacity = '1'; setTimeout(() => fb.style.opacity = '0', 2000); };
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(ta.value).then(showCopied).catch(() => {
-      ta.select(); try { document.execCommand('copy'); showCopied(); } catch(_) {}
-    });
-  } else {
-    ta.select(); try { document.execCommand('copy'); showCopied(); } catch(_) {}
-  }
+function downloadIcs() {
+  const ics = buildIcs(currentPlayer);
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `badminton-${currentPlayer.replace(/\s+/g, '_')}.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
 </body>
