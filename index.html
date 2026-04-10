@@ -223,34 +223,76 @@ function parseExcel(data) {
   const TIME_COLS = [2, 6, 10, 14];
   const out = [];
   let curTimes = [];
+  const MON = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
 
-  function isTime(v) { return v && typeof v === 'string' && /^\d{1,2}:\d{2}$/.test(v.trim()); }
-  function parseRawDate(raw) {
-    if (typeof raw === 'number') { const d = XLSX.SSF.parse_date_code(raw); if (d) return new Date(d.y, d.m-1, d.d); }
+  function isTime(v) {
+    if (v === null || v === undefined) return false;
+    return /^\d{1,2}:\d{2}(:\d{2})?$/.test(String(v).trim());
+  }
+
+  function normalizeTime(v) {
+    const m = String(v).trim().match(/^(\d{1,2}):(\d{2})/);
+    return m ? `${m[1].padStart(2,'0')}:${m[2]}` : null;
+  }
+
+  function parseAnyDate(raw, formatted) {
+    // Native Date
     if (raw instanceof Date && !isNaN(raw)) return raw;
+    // Excel serial
+    if (typeof raw === 'number' && raw > 40000) {
+      const d = XLSX.SSF.parse_date_code(raw); if (d) return new Date(d.y, d.m-1, d.d);
+    }
+    for (const val of [formatted, raw]) {
+      if (val === null || val === undefined) continue;
+      const s = String(val).trim();
+      if (!s || isTime(s) || /^\d{1,2}(\.\d+)?$/.test(s)) continue;
+      let m;
+      // YYYY-MM-DD (with optional time)
+      m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+      // DD-MMM-YY or DD-MMM-YYYY  e.g. "15-Apr-26"
+      m = s.match(/^(\d{1,2})[- ]([A-Za-z]{3})[- ](\d{2,4})$/);
+      if (m) {
+        const mo = MON[m[2].toLowerCase()];
+        if (mo !== undefined) { let yr = +m[3]; if (yr < 100) yr += 2000; return new Date(yr, mo, +m[1]); }
+      }
+      // DD/MM/YYYY
+      m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+      // Last resort
+      const d = new Date(s);
+      if (!isNaN(d) && d.getFullYear() > 2000) return d;
+    }
     return null;
   }
 
   let i = 0;
   while (i < rows.length) {
     const row = rows[i], rawRow = rawRows[i];
-    if (row[2] && isTime(String(row[2]))) {
+    // Time header row
+    if (isTime(row[2]) || isTime(rawRow[2])) {
       curTimes = [];
-      TIME_COLS.forEach(tc => { if (row[tc] && isTime(String(row[tc]))) curTimes.push({ col: tc, time: String(row[tc]).trim() }); });
+      TIME_COLS.forEach(tc => {
+        const tv = isTime(row[tc]) ? row[tc] : (isTime(rawRow[tc]) ? rawRow[tc] : null);
+        if (tv) { const t = normalizeTime(tv); if (t) curTimes.push({ col: tc, time: t }); }
+      });
       i++; continue;
     }
-    const dateVal = parseRawDate(rawRow[1]);
+    // Date row
+    const dateVal = parseAnyDate(rawRow[1], row[1]);
     if (dateVal) {
       const prows = [row];
       let j = i + 1;
       while (j < rows.length) {
-        if (parseRawDate(rawRows[j][1])) break;
-        if (rows[j][2] && isTime(String(rows[j][2]))) break;
+        if (parseAnyDate(rawRows[j][1], rows[j][1])) break;
+        if (isTime(rows[j][2]) || isTime(rawRows[j][2])) break;
         prows.push(rows[j]); j++;
       }
       curTimes.forEach(({ col, time }) => {
         const names = [];
-        prows.forEach(pr => { [col, col+2].forEach(c => { const v = pr[c]; if (v && String(v).trim() && !isTime(String(v))) names.push(String(v).trim()); }); });
+        prows.forEach(pr => {
+          [col, col+2].forEach(c => { const v = pr[c]; if (v && String(v).trim() && !isTime(String(v))) names.push(String(v).trim()); });
+        });
         names.forEach(name => out.push({
           date: `${dateVal.getFullYear()}-${String(dateVal.getMonth()+1).padStart(2,'0')}-${String(dateVal.getDate()).padStart(2,'0')}`,
           y: dateVal.getFullYear(), m: dateVal.getMonth(), d: dateVal.getDate(), time, name
