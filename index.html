@@ -83,6 +83,13 @@
   .btn-primary:hover { background: #145a3d; }
   .btn-secondary { background: white; color: var(--green); border: 1.5px solid var(--border); }
   .btn-secondary:hover { border-color: var(--green-mid); background: var(--green-pale); }
+  .btn-gcal { background: white; color: #1a73e8; border: 1.5px solid #c5d8fc; gap: 7px; }
+  .btn-gcal:hover { background: #f0f5ff; }
+  .gcal-hint { display: none; margin-top: 1rem; background: #f0f5ff; border: 1.5px solid #c5d8fc; border-radius: 12px; padding: 1rem 1.25rem; font-size: 0.82rem; color: #1a4a8a; line-height: 1.7; }
+  .gcal-hint p { margin-bottom: 0.4rem; }
+  .gcal-hint ol { margin: 0.25rem 0 0 1.1rem; }
+  .gcal-hint li { margin-bottom: 0.2rem; }
+  .gcal-hint .note { font-size: 0.78rem; color: #4a6a9a; margin-top: 0.6rem; }
   .month-block { margin-bottom: 1.5rem; }
   .month-title { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink3); margin-bottom: 0.6rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
   .session-row { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
@@ -158,7 +165,23 @@
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 10V1M5 7l3 3 3-3M2 12v1a2 2 0 002 2h8a2 2 0 002-2v-1"/></svg>
         Descarregar .ics
       </button>
+      <button class="btn btn-gcal" onclick="toggleGcalHint()">
+        <svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="6" width="36" height="36" rx="3" fill="white" stroke="#dadce0" stroke-width="2"/><rect x="6" y="14" width="36" height="4" fill="#4285f4"/><line x1="16" y1="6" x2="16" y2="18" stroke="#4285f4" stroke-width="3" stroke-linecap="round"/><line x1="32" y1="6" x2="32" y2="18" stroke="#4285f4" stroke-width="3" stroke-linecap="round"/><text x="24" y="36" text-anchor="middle" font-size="16" font-weight="bold" fill="#1a73e8" font-family="sans-serif">G</text></svg>
+        Google Calendar
+      </button>
     </div>
+  </div>
+
+  <div class="gcal-hint" id="gcal-hint">
+    <p><strong>Com afegir a Google Calendar (i sobreescriure si canvia):</strong></p>
+    <ol>
+      <li>Fes clic a <strong>Descarregar .ics</strong> per baixar el fitxer</li>
+      <li>Obre <a href="https://calendar.google.com" target="_blank" style="color:#1a73e8">calendar.google.com</a> &rarr; icona ⚙️ &rarr; <strong>Configuració</strong></li>
+      <li>Al menú esquerre: <strong>Importa i exporta</strong> &rarr; <strong>Importa</strong></li>
+      <li>Selecciona el fitxer <code>.ics</code> descarregat i prem <strong>Importar</strong></li>
+    </ol>
+    <p class="note">🔄 <strong>Si el calendari canvia</strong>, torna a descarregar l'arxiu i repeteix la importació — Google Calendar detectarà els mateixos events (per ID) i els <strong>actualitzarà automàticament</strong> sense duplicar-los.</p>
+    <p class="note">📱 A l'iPhone o iPad, simplement obre el fitxer <code>.ics</code> i prem <strong>Afegir tots</strong> — si ja tenies els events importats anteriorment, els <strong>sobreescriurà automàticament</strong> gràcies al mateix ID, sense duplicats.</p>
   </div>
   <div id="session-list"></div>
 </div>
@@ -330,6 +353,7 @@ function selectPlayer(name) {
   renderPanel(name);
   document.getElementById('picker-screen').style.display = 'none';
   document.getElementById('cal-panel').style.display = 'block';
+  document.getElementById('gcal-hint').style.display = 'none';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -398,6 +422,11 @@ function buildIcs(name) {
     ics += `BEGIN:VEVENT\r\nUID:${uid}\r\nSUMMARY:Bàdminton 🏸\r\nDTSTART:${dtstart}\r\nDTEND:${dtend}\r\nDESCRIPTION:${others.length ? 'Amb: '+others.join(', ') : ''}\r\nEND:VEVENT\r\n`;
   });
   return ics + 'END:VCALENDAR';
+}
+
+function toggleGcalHint() {
+  const h = document.getElementById('gcal-hint');
+  h.style.display = h.style.display === 'block' ? 'none' : 'block';
 }
 
 function downloadIcs() {
