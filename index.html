@@ -349,7 +349,8 @@ function buildIcs(name) {
     const ds = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
     const [hh, mm] = s.time.split(':').map(Number);
     const dtstart = `${ds}T${pad(hh)}${pad(mm)}00`;
-    const dtend = `${ds}T${pad(hh+1)}${pad(mm)}00`;
+    const endTotal = hh * 60 + mm + 45;
+    const dtend = `${ds}T${pad(Math.floor(endTotal/60))}${pad(endTotal%60)}00`;
     const others = SESSIONS.filter(x => x.date===s.date && x.time===s.time && x.name!==name).map(x=>x.name);
     const uid = `badminton-${ds}-${pad(hh)}${pad(mm)}-${name.replace(/\s+/g,'').toLowerCase()}@badminton`;
     ics += `BEGIN:VEVENT\r\nUID:${uid}\r\nSUMMARY:Bàdminton 🏸\r\nDTSTART:${dtstart}\r\nDTEND:${dtend}\r\nDESCRIPTION:${others.length ? 'Amb: '+others.join(', ') : ''}\r\nEND:VEVENT\r\n`;
