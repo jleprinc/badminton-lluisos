@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bàdminton — Calendari</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --green: #1a6b4a;
+    --green-light: #e8f5ef;
+    --green-mid: #4caf82;
+    --green-pale: #f0faf5;
+    --ink: #1a1f1c;
+    --ink2: #4a5450;
+    --ink3: #8a9490;
+    --border: #d8e8e0;
+    --white: #ffffff;
+    --court: #2d5a3d;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--white); color: var(--ink); min-height: 100vh; }
+
+  .hero {
+    background: var(--court); color: white;
+    padding: 3rem 2rem 4rem; text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(255,255,255,0.04) 59px, rgba(255,255,255,0.04) 60px),
+      repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(255,255,255,0.04) 59px, rgba(255,255,255,0.04) 60px);
+  }
+  .hero-inner { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; }
+  .shuttle-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+  .hero h1 { font-family: 'DM Serif Display', serif; font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 0.5rem; }
+  .hero p { color: rgba(255,255,255,0.65); font-size: 0.95rem; font-weight: 300; }
+
+  #upload-screen { max-width: 520px; margin: 3rem auto; padding: 0 1.5rem; text-align: center; }
+  .upload-zone { border: 2px dashed var(--border); border-radius: 20px; padding: 3rem 2rem; cursor: pointer; transition: all 0.2s; background: var(--green-pale); position: relative; }
+  .upload-zone:hover, .upload-zone.drag-over { border-color: var(--green-mid); background: var(--green-light); }
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+  .upload-zone h2 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; font-weight: 400; color: var(--ink); margin-bottom: 0.4rem; }
+  .upload-zone p { font-size: 0.85rem; color: var(--ink3); }
+  .upload-hint { font-size: 0.8rem; color: var(--ink3); margin-top: 1.25rem; line-height: 1.6; }
+  .upload-hint strong { color: var(--ink2); }
+  #error-box { display: none; max-width: 500px; margin: 1.5rem auto 0; padding: 1rem 1.25rem; background: #fff5f5; border: 1.5px solid #fcc; border-radius: 12px; font-size: 0.85rem; color: #a00; text-align: left; }
+
+  #loading-screen { display: none; text-align: center; padding: 4rem 2rem; max-width: 400px; margin: 0 auto; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 1rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading-screen p { color: var(--ink3); font-size: 0.9rem; }
+
+  #picker-screen { display: none; max-width: 700px; margin: 0 auto; padding: 2.5rem 1.5rem; }
+  .top-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .file-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: var(--green-light); border: 1px solid var(--border); border-radius: 20px; font-size: 0.8rem; color: var(--green); font-weight: 500; }
+  .change-btn { background: none; border: none; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; color: var(--ink3); cursor: pointer; text-decoration: underline; padding: 0; }
+  .change-btn:hover { color: var(--green); }
+  .picker-label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink3); margin-bottom: 0.75rem; }
+  .search-wrap { position: relative; margin-bottom: 1rem; }
+  .search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink3); pointer-events: none; }
+  #search { width: 100%; padding: 0.75rem 1rem 0.75rem 2.75rem; border: 1.5px solid var(--border); border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 1rem; color: var(--ink); background: var(--white); outline: none; transition: border-color 0.2s; }
+  #search:focus { border-color: var(--green-mid); }
+  #search::placeholder { color: var(--ink3); }
+  .player-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+  .player-btn { padding: 0.6rem 0.9rem; border: 1.5px solid var(--border); border-radius: 10px; background: var(--white); color: var(--ink2); font-family: 'DM Sans', sans-serif; font-size: 0.875rem; cursor: pointer; text-align: left; transition: all 0.15s; line-height: 1.3; }
+  .player-btn:hover { border-color: var(--green-mid); background: var(--green-pale); color: var(--green); }
+  .player-btn.hidden { display: none; }
+
+  #cal-panel { display: none; max-width: 700px; margin: 0 auto; padding: 0 1.5rem 3rem; animation: fadeUp 0.3s ease; }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+  .player-header { background: var(--green-light); border: 1.5px solid var(--border); border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .player-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--green); color: white; display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif; font-size: 1.1rem; flex-shrink: 0; }
+  .player-info h2 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; font-weight: 400; color: var(--ink); }
+  .player-info p { font-size: 0.85rem; color: var(--ink3); margin-top: 2px; }
+  .header-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 0.55rem 1rem; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.15s; text-decoration: none; border: none; }
+  .btn-primary { background: var(--green); color: white; }
+  .btn-primary:hover { background: #145a3d; }
+  .btn-secondary { background: white; color: var(--green); border: 1.5px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--green-mid); background: var(--green-pale); }
+  .month-block { margin-bottom: 1.5rem; }
+  .month-title { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink3); margin-bottom: 0.6rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+  .session-row { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+  .session-row:last-child { border-bottom: none; }
+  .session-date { min-width: 52px; text-align: center; flex-shrink: 0; }
+  .session-date .day-num { font-family: 'DM Serif Display', serif; font-size: 1.5rem; font-weight: 400; line-height: 1; color: var(--green); }
+  .session-date .day-name { font-size: 0.7rem; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.05em; }
+  .session-divider { width: 1px; height: 32px; background: var(--border); flex-shrink: 0; }
+  .session-info { flex: 1; }
+  .session-time { font-size: 0.95rem; font-weight: 500; color: var(--ink); }
+  .session-others { font-size: 0.8rem; color: var(--ink3); margin-top: 2px; }
+  .session-badge { font-size: 0.7rem; padding: 3px 8px; background: var(--green-light); color: var(--green); border-radius: 20px; font-weight: 500; white-space: nowrap; }
+  .ics-box { display: none; margin-top: 1rem; background: var(--green-pale); border: 1.5px solid var(--border); border-radius: 12px; padding: 1rem; }
+  .ics-box p { font-size: 0.8rem; color: var(--ink3); margin-bottom: 0.5rem; }
+  .ics-box textarea { width: 100%; height: 80px; font-family: monospace; font-size: 0.7rem; border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; color: var(--ink2); background: white; resize: none; outline: none; }
+  .ics-copy-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .ics-copy-row .copied { font-size: 0.8rem; color: var(--green); opacity: 0; transition: opacity 0.3s; }
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--ink3); font-size: 0.85rem; cursor: pointer; margin-bottom: 1.25rem; background: none; border: none; padding: 0; font-family: 'DM Sans', sans-serif; }
+  .back-btn:hover { color: var(--green); }
+  footer { text-align: center; padding: 2rem; color: var(--ink3); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 2rem; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <span class="shuttle-icon">🏸</span>
+    <h1>Bàdminton — Calendari</h1>
+    <p id="hero-subtitle">Puja el fitxer Excel per generar els calendaris de tots els jugadors</p>
+  </div>
+</div>
+
+<div id="upload-screen">
+  <div class="upload-zone" id="upload-zone">
+    <input type="file" id="file-input" accept=".xlsx,.xls">
+    <div class="upload-icon">📂</div>
+    <h2>Puja el calendari Excel</h2>
+    <p>Fes clic o arrossega el fitxer aquí</p>
+  </div>
+  <p class="upload-hint">
+    Format esperat: dates a la <strong>columna B</strong>, franges horàries (p.ex. 19:30, 20:15…) a la primera fila de cada bloc setmanal, noms dels jugadors a les columnes C, E, G, I, K, M, O, Q.
+  </p>
+  <div id="error-box"></div>
+</div>
+
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <p>Llegint el fitxer…</p>
+</div>
+
+<div id="picker-screen">
+  <div class="top-bar">
+    <div class="file-badge">📄 <span id="file-name"></span></div>
+    <button class="change-btn" onclick="resetToUpload()">Canviar fitxer</button>
+  </div>
+  <p class="picker-label">Selecciona el teu nom</p>
+  <div class="search-wrap">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l3 3"/></svg>
+    <input type="text" id="search" placeholder="Busca el teu nom…" autocomplete="off">
+  </div>
+  <div class="player-grid" id="player-grid"></div>
+</div>
+
+<div id="cal-panel">
+  <button class="back-btn" onclick="goBack()">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 12L6 8l4-4"/></svg>
+    Tornar
+  </button>
+  <div class="player-header">
+    <div class="player-avatar" id="p-avatar"></div>
+    <div class="player-info">
+      <h2 id="p-name"></h2>
+      <p id="p-count"></p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" onclick="showIcs()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 10V1M5 7l3 3 3-3M2 12v1a2 2 0 002 2h8a2 2 0 002-2v-1"/></svg>
+        Descarregar .ics
+      </button>
+    </div>
+  </div>
+  <div class="ics-box" id="ics-box">
+    <p>Copia el text, enganxa'l al bloc de notes, desa'l com <strong>badminton.ics</strong> i obre'l per importar al teu calendari (Google Calendar, Apple Calendar, Outlook…).</p>
+    <textarea id="ics-text" readonly></textarea>
+    <div class="ics-copy-row">
+      <button class="btn btn-secondary" onclick="copyIcs()">Copiar al porta-retalls</button>
+      <span class="copied" id="copied-msg">Copiat!</span>
+    </div>
+  </div>
+  <div id="session-list"></div>
+</div>
+
+<footer>Bàdminton — Generat automàticament a partir del fitxer Excel</footer>
+
+<script>
+const MONTH_NAMES = ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
+const DAY_NAMES = ['Dg','Dl','Dt','Dc','Dj','Dv','Ds'];
+let SESSIONS = [];
+let currentPlayer = null;
+
+const zone = document.getElementById('upload-zone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
+document.getElementById('file-input').addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+function showOnly(id) {
+  ['upload-screen','loading-screen','picker-screen','cal-panel'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+}
+
+function handleFile(file) {
+  document.getElementById('error-box').style.display = 'none';
+  showOnly('loading-screen');
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const sessions = parseExcel(new Uint8Array(ev.target.result));
+      if (!sessions.length) throw new Error('No s\'han trobat sessions al fitxer. Comprova que el format sigui el correcte.');
+      SESSIONS = sessions;
+      document.getElementById('file-name').textContent = file.name;
+      const dates = sessions.map(s => s.date).sort();
+      const playerCount = new Set(sessions.map(s => s.name)).size;
+      document.getElementById('hero-subtitle').textContent =
+        `${playerCount} jugadors · ${formatDate(dates[0])} – ${formatDate(dates[dates.length-1])}`;
+      buildPlayerGrid();
+      showOnly('picker-screen');
+    } catch(e) {
+      showOnly('upload-screen');
+      const eb = document.getElementById('error-box');
+      eb.textContent = '⚠️ ' + e.message;
+      eb.style.display = 'block';
+    }
+  };
+  reader.onerror = () => showOnly('upload-screen');
+  reader.readAsArrayBuffer(file);
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function parseExcel(data) {
+  const wb = XLSX.read(data, { type: 'array', cellDates: true });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: false });
+  const rawRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: null, raw: true });
+  const TIME_COLS = [2, 6, 10, 14];
+  const out = [];
+  let curTimes = [];
+
+  function isTime(v) { return v && typeof v === 'string' && /^\d{1,2}:\d{2}$/.test(v.trim()); }
+  function parseRawDate(raw) {
+    if (typeof raw === 'number') { const d = XLSX.SSF.parse_date_code(raw); if (d) return new Date(d.y, d.m-1, d.d); }
+    if (raw instanceof Date && !isNaN(raw)) return raw;
+    return null;
+  }
+
+  let i = 0;
+  while (i < rows.length) {
+    const row = rows[i], rawRow = rawRows[i];
+    if (row[2] && isTime(String(row[2]))) {
+      curTimes = [];
+      TIME_COLS.forEach(tc => { if (row[tc] && isTime(String(row[tc]))) curTimes.push({ col: tc, time: String(row[tc]).trim() }); });
+      i++; continue;
+    }
+    const dateVal = parseRawDate(rawRow[1]);
+    if (dateVal) {
+      const prows = [row];
+      let j = i + 1;
+      while (j < rows.length) {
+        if (parseRawDate(rawRows[j][1])) break;
+        if (rows[j][2] && isTime(String(rows[j][2]))) break;
+        prows.push(rows[j]); j++;
+      }
+      curTimes.forEach(({ col, time }) => {
+        const names = [];
+        prows.forEach(pr => { [col, col+2].forEach(c => { const v = pr[c]; if (v && String(v).trim() && !isTime(String(v))) names.push(String(v).trim()); }); });
+        names.forEach(name => out.push({
+          date: `${dateVal.getFullYear()}-${String(dateVal.getMonth()+1).padStart(2,'0')}-${String(dateVal.getDate()).padStart(2,'0')}`,
+          y: dateVal.getFullYear(), m: dateVal.getMonth(), d: dateVal.getDate(), time, name
+        }));
+      });
+      i = j; continue;
+    }
+    i++;
+  }
+  return out;
+}
+
+function buildPlayerGrid() {
+  const players = [...new Set(SESSIONS.map(s => s.name))].sort();
+  const grid = document.getElementById('player-grid');
+  grid.innerHTML = '';
+  players.forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'player-btn';
+    btn.textContent = name;
+    btn.dataset.name = name.toLowerCase();
+    btn.onclick = () => selectPlayer(name);
+    grid.appendChild(btn);
+  });
+  const search = document.getElementById('search');
+  search.value = '';
+  search.oninput = function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.player-btn').forEach(b => b.classList.toggle('hidden', !b.dataset.name.includes(q)));
+  };
+}
+
+function selectPlayer(name) {
+  currentPlayer = name;
+  renderPanel(name);
+  document.getElementById('picker-screen').style.display = 'none';
+  document.getElementById('cal-panel').style.display = 'block';
+  document.getElementById('ics-box').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBack() {
+  document.getElementById('cal-panel').style.display = 'none';
+  document.getElementById('picker-screen').style.display = 'block';
+  currentPlayer = null;
+}
+
+function resetToUpload() {
+  SESSIONS = []; currentPlayer = null;
+  document.getElementById('file-input').value = '';
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('hero-subtitle').textContent = 'Puja el fitxer Excel per generar els calendaris de tots els jugadors';
+  showOnly('upload-screen');
+}
+
+function initials(name) { return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(); }
+
+function renderPanel(name) {
+  const mine = SESSIONS.filter(s => s.name === name);
+  document.getElementById('p-avatar').textContent = initials(name);
+  document.getElementById('p-name').textContent = name;
+  const months = [...new Set(mine.map(s => MONTH_NAMES[s.m]))];
+  document.getElementById('p-count').textContent = `${mine.length} sessions · ${months.join(' – ')} ${mine[0]?.y || ''}`;
+
+  const byMonth = {};
+  mine.forEach(s => { const mk = `${s.y}-${s.m}`; if (!byMonth[mk]) byMonth[mk] = { y: s.y, m: s.m, sessions: [] }; byMonth[mk].sessions.push(s); });
+
+  const list = document.getElementById('session-list');
+  list.innerHTML = '';
+  Object.values(byMonth).sort((a,b) => a.y-b.y || a.m-b.m).forEach(({ y, m, sessions }) => {
+    const block = document.createElement('div'); block.className = 'month-block';
+    const title = document.createElement('div'); title.className = 'month-title'; title.textContent = `${MONTH_NAMES[m]} ${y}`; block.appendChild(title);
+    sessions.sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)).forEach(s => {
+      const d = new Date(s.date + 'T00:00:00');
+      const others = SESSIONS.filter(x => x.date === s.date && x.time === s.time && x.name !== name).map(x => x.name);
+      const row = document.createElement('div'); row.className = 'session-row';
+      row.innerHTML = `
+        <div class="session-date"><div class="day-num">${d.getDate()}</div><div class="day-name">${DAY_NAMES[d.getDay()]}</div></div>
+        <div class="session-divider"></div>
+        <div class="session-info">
+          <div class="session-time">${s.time}h</div>
+          <div class="session-others">${others.length ? 'Amb: '+others.join(', ') : 'Sense parella assignada'}</div>
+        </div>
+        <div class="session-badge">Pista</div>`;
+      block.appendChild(row);
+    });
+    list.appendChild(block);
+  });
+}
+
+function buildIcs(name) {
+  const mine = SESSIONS.filter(s => s.name === name);
+  const pad = n => String(n).padStart(2,'0');
+  let ics = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Badminton//EN\r\nCALSCALE:GREGORIAN\r\nX-WR-CALNAME:Bàdminton ${name}\r\n`;
+  mine.forEach(s => {
+    const d = new Date(s.date + 'T00:00:00');
+    const ds = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+    const [hh, mm] = s.time.split(':').map(Number);
+    const dtstart = `${ds}T${pad(hh)}${pad(mm)}00`;
+    const dtend = `${ds}T${pad(hh+1)}${pad(mm)}00`;
+    const others = SESSIONS.filter(x => x.date===s.date && x.time===s.time && x.name!==name).map(x=>x.name);
+    const uid = `badminton-${ds}-${pad(hh)}${pad(mm)}-${name.replace(/\s+/g,'').toLowerCase()}@badminton`;
+    ics += `BEGIN:VEVENT\r\nUID:${uid}\r\nSUMMARY:Bàdminton 🏸\r\nDTSTART:${dtstart}\r\nDTEND:${dtend}\r\nDESCRIPTION:${others.length ? 'Amb: '+others.join(', ') : ''}\r\nEND:VEVENT\r\n`;
+  });
+  return ics + 'END:VCALENDAR';
+}
+
+function showIcs() {
+  document.getElementById('ics-text').value = buildIcs(currentPlayer);
+  const box = document.getElementById('ics-box');
+  box.style.display = box.style.display === 'block' ? 'none' : 'block';
+}
+
+function copyIcs() {
+  const ta = document.getElementById('ics-text');
+  const fb = document.getElementById('copied-msg');
+  const showCopied = () => { fb.style.opacity = '1'; setTimeout(() => fb.style.opacity = '0', 2000); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value).then(showCopied).catch(() => {
+      ta.select(); try { document.execCommand('copy'); showCopied(); } catch(_) {}
+    });
+  } else {
+    ta.select(); try { document.execCommand('copy'); showCopied(); } catch(_) {}
+  }
+}
+</script>
+</body>
+</html>
