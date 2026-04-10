@@ -8,37 +8,31 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --green: #1a6b4a;
-    --green-light: #e8f5ef;
-    --green-mid: #4caf82;
-    --green-pale: #f0faf5;
-    --ink: #1a1f1c;
-    --ink2: #4a5450;
-    --ink3: #8a9490;
-    --border: #d8e8e0;
-    --white: #ffffff;
-    --court: #2d5a3d;
+    --green: #1a6b4a; --green-light: #e8f5ef; --green-mid: #4caf82;
+    --green-pale: #f0faf5; --ink: #1a1f1c; --ink2: #4a5450;
+    --ink3: #8a9490; --border: #d8e8e0; --white: #ffffff; --court: #2d5a3d;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body { font-family: 'DM Sans', sans-serif; background: var(--white); color: var(--ink); min-height: 100vh; }
 
-  .hero {
-    background: var(--court); color: white;
-    padding: 3rem 2rem 4rem; text-align: center;
-    position: relative; overflow: hidden;
-  }
-  .hero::before {
-    content: ''; position: absolute; inset: 0;
-    background:
-      repeating-linear-gradient(0deg, transparent, transparent 59px, rgba(255,255,255,0.04) 59px, rgba(255,255,255,0.04) 60px),
-      repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(255,255,255,0.04) 59px, rgba(255,255,255,0.04) 60px);
-  }
+  /* HERO */
+  .hero { background: var(--court); color: white; padding: 3rem 2rem 4rem; text-align: center; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,255,255,0.04) 59px,rgba(255,255,255,0.04) 60px),
+                repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(255,255,255,0.04) 59px,rgba(255,255,255,0.04) 60px); }
   .hero-inner { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; }
   .shuttle-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
-  .hero h1 { font-family: 'DM Serif Display', serif; font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 0.5rem; }
+  .hero h1 { font-family: 'DM Serif Display', serif; font-size: clamp(1.8rem,5vw,2.8rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 0.5rem; }
   .hero p { color: rgba(255,255,255,0.65); font-size: 0.95rem; font-weight: 300; }
 
+  /* LANG TOGGLE */
+  .lang-toggle { position: absolute; top: 1rem; right: 1rem; z-index: 10; display: flex; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; overflow: hidden; }
+  .lang-btn { padding: 5px 11px; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.04em; cursor: pointer; border: none; background: transparent; color: rgba(255,255,255,0.55); transition: all 0.15s; }
+  .lang-btn.active { background: rgba(255,255,255,0.2); color: white; }
+  .lang-btn:hover:not(.active) { color: rgba(255,255,255,0.85); }
+
+  /* UPLOAD */
   #upload-screen { max-width: 520px; margin: 3rem auto; padding: 0 1.5rem; text-align: center; }
   .upload-zone { border: 2px dashed var(--border); border-radius: 20px; padding: 3rem 2rem; cursor: pointer; transition: all 0.2s; background: var(--green-pale); position: relative; }
   .upload-zone:hover, .upload-zone.drag-over { border-color: var(--green-mid); background: var(--green-light); }
@@ -50,11 +44,13 @@
   .upload-hint strong { color: var(--ink2); }
   #error-box { display: none; max-width: 500px; margin: 1.5rem auto 0; padding: 1rem 1.25rem; background: #fff5f5; border: 1.5px solid #fcc; border-radius: 12px; font-size: 0.85rem; color: #a00; text-align: left; }
 
+  /* LOADING */
   #loading-screen { display: none; text-align: center; padding: 4rem 2rem; max-width: 400px; margin: 0 auto; }
   .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 1rem; }
   @keyframes spin { to { transform: rotate(360deg); } }
   #loading-screen p { color: var(--ink3); font-size: 0.9rem; }
 
+  /* PICKER */
   #picker-screen { display: none; max-width: 700px; margin: 0 auto; padding: 2.5rem 1.5rem 3rem; overflow: visible; }
   .top-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; flex-wrap: wrap; }
   .file-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: var(--green-light); border: 1px solid var(--border); border-radius: 20px; font-size: 0.8rem; color: var(--green); font-weight: 500; }
@@ -71,6 +67,7 @@
   .player-btn:hover { border-color: var(--green-mid); background: var(--green-pale); color: var(--green); }
   .player-btn.hidden { display: none; }
 
+  /* CAL PANEL */
   #cal-panel { display: none; max-width: 700px; margin: 0 auto; padding: 0 1.5rem 3rem; animation: fadeUp 0.3s ease; }
   @keyframes fadeUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
   .player-header { background: var(--green-light); border: 1.5px solid var(--border); border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
@@ -81,8 +78,6 @@
   .btn { display: inline-flex; align-items: center; gap: 6px; padding: 0.55rem 1rem; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.15s; text-decoration: none; border: none; }
   .btn-primary { background: var(--green); color: white; }
   .btn-primary:hover { background: #145a3d; }
-  .btn-secondary { background: white; color: var(--green); border: 1.5px solid var(--border); }
-  .btn-secondary:hover { border-color: var(--green-mid); background: var(--green-pale); }
   .btn-gcal { background: white; color: #1a73e8; border: 1.5px solid #c5d8fc; gap: 7px; }
   .btn-gcal:hover { background: #f0f5ff; }
   .gcal-hint { display: none; margin-top: 1rem; background: #f0f5ff; border: 1.5px solid #c5d8fc; border-radius: 12px; padding: 1rem 1.25rem; font-size: 0.82rem; color: #1a4a8a; line-height: 1.7; }
@@ -102,7 +97,6 @@
   .session-time { font-size: 0.95rem; font-weight: 500; color: var(--ink); }
   .session-others { font-size: 0.8rem; color: var(--ink3); margin-top: 2px; }
   .session-badge { font-size: 0.7rem; padding: 3px 8px; background: var(--green-light); color: var(--green); border-radius: 20px; font-weight: 500; white-space: nowrap; }
-
   .back-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--ink3); font-size: 0.85rem; cursor: pointer; margin-bottom: 1.25rem; background: none; border: none; padding: 0; font-family: 'DM Sans', sans-serif; }
   .back-btn:hover { color: var(--green); }
   footer { text-align: center; padding: 2rem; color: var(--ink3); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 2rem; }
@@ -114,7 +108,11 @@
   <div class="hero-inner">
     <span class="shuttle-icon">🏸</span>
     <h1>Bàdminton — Calendari</h1>
-    <p id="hero-subtitle">Puja el fitxer Excel per generar els calendaris de tots els jugadors</p>
+    <p id="hero-subtitle"></p>
+  </div>
+  <div class="lang-toggle">
+    <button class="lang-btn" id="btn-ca" onclick="setLang('ca')">CA</button>
+    <button class="lang-btn" id="btn-es" onclick="setLang('es')">ES</button>
   </div>
 </div>
 
@@ -122,37 +120,35 @@
   <div class="upload-zone" id="upload-zone">
     <input type="file" id="file-input" accept=".xlsx,.xls">
     <div class="upload-icon">📂</div>
-    <h2>Puja el calendari Excel</h2>
-    <p>Fes clic o arrossega el fitxer aquí</p>
+    <h2 id="upload-title"></h2>
+    <p id="upload-sub"></p>
   </div>
-  <p class="upload-hint">
-    Format esperat: dates a la <strong>columna B</strong>, franges horàries (p.ex. 19:30, 20:15…) a la primera fila de cada bloc setmanal, noms dels jugadors a les columnes C, E, G, I, K, M, O, Q.
-  </p>
+  <p class="upload-hint" id="upload-hint"></p>
   <div id="error-box"></div>
 </div>
 
 <div id="loading-screen">
   <div class="spinner"></div>
-  <p>Llegint el fitxer…</p>
+  <p id="loading-text"></p>
 </div>
 
 <div id="picker-screen">
   <div class="top-bar">
     <div class="file-badge">📄 <span id="file-name"></span></div>
-    <button class="change-btn" onclick="resetToUpload()">Canviar fitxer</button>
+    <button class="change-btn" id="change-btn" onclick="resetToUpload()"></button>
   </div>
-  <p class="picker-label">Selecciona el teu nom</p>
+  <p class="picker-label" id="picker-label"></p>
   <div class="search-wrap">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l3 3"/></svg>
-    <input type="text" id="search" placeholder="Busca el teu nom…" autocomplete="off">
+    <input type="text" id="search" autocomplete="off">
   </div>
   <div class="player-grid" id="player-grid"></div>
 </div>
 
 <div id="cal-panel">
-  <button class="back-btn" onclick="goBack()">
+  <button class="back-btn" id="back-btn" onclick="goBack()">
     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 12L6 8l4-4"/></svg>
-    Tornar
+    <span id="back-label"></span>
   </button>
   <div class="player-header">
     <div class="player-avatar" id="p-avatar"></div>
@@ -163,37 +159,155 @@
     <div class="header-actions">
       <button class="btn btn-primary" onclick="downloadIcs()">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 10V1M5 7l3 3 3-3M2 12v1a2 2 0 002 2h8a2 2 0 002-2v-1"/></svg>
-        Descarregar .ics
+        <span id="btn-download-label"></span>
       </button>
       <button class="btn btn-gcal" onclick="toggleGcalHint()">
-        <svg width="16" height="16" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="6" width="36" height="36" rx="3" fill="white" stroke="#dadce0" stroke-width="2"/><rect x="6" y="14" width="36" height="4" fill="#4285f4"/><line x1="16" y1="6" x2="16" y2="18" stroke="#4285f4" stroke-width="3" stroke-linecap="round"/><line x1="32" y1="6" x2="32" y2="18" stroke="#4285f4" stroke-width="3" stroke-linecap="round"/><text x="24" y="36" text-anchor="middle" font-size="16" font-weight="bold" fill="#1a73e8" font-family="sans-serif">G</text></svg>
+        <svg width="16" height="16" viewBox="0 0 48 48" fill="none"><rect x="6" y="6" width="36" height="36" rx="3" fill="white" stroke="#dadce0" stroke-width="2"/><rect x="6" y="14" width="36" height="4" fill="#4285f4"/><line x1="16" y1="6" x2="16" y2="18" stroke="#4285f4" stroke-width="3" stroke-linecap="round"/><line x1="32" y1="6" x2="32" y2="18" stroke="#4285f4" stroke-width="3" stroke-linecap="round"/><text x="24" y="36" text-anchor="middle" font-size="16" font-weight="bold" fill="#1a73e8" font-family="sans-serif">G</text></svg>
         Google Calendar
       </button>
     </div>
   </div>
 
   <div class="gcal-hint" id="gcal-hint">
-    <p><strong>Com afegir a Google Calendar (i sobreescriure si canvia):</strong></p>
-    <ol>
-      <li>Fes clic a <strong>Descarregar .ics</strong> per baixar el fitxer</li>
-      <li>Obre <a href="https://calendar.google.com" target="_blank" style="color:#1a73e8">calendar.google.com</a> &rarr; icona ⚙️ &rarr; <strong>Configuració</strong></li>
-      <li>Al menú esquerre: <strong>Importa i exporta</strong> &rarr; <strong>Importa</strong></li>
-      <li>Selecciona el fitxer <code>.ics</code> descarregat i prem <strong>Importar</strong></li>
-    </ol>
-    <p class="note">🔄 <strong>Si el calendari canvia</strong>, torna a descarregar l'arxiu i repeteix la importació — Google Calendar detectarà els mateixos events (per ID) i els <strong>actualitzarà automàticament</strong> sense duplicar-los.</p>
-    <p class="note">📱 A l'iPhone o iPad, simplement obre el fitxer <code>.ics</code> i prem <strong>Afegir tots</strong> — si ja tenies els events importats anteriorment, els <strong>sobreescriurà automàticament</strong> gràcies al mateix ID, sense duplicats.</p>
+    <p id="gcal-title"></p>
+    <ol id="gcal-steps"></ol>
+    <p class="note" id="gcal-note-overwrite"></p>
+    <p class="note" id="gcal-note-ios"></p>
   </div>
+
   <div id="session-list"></div>
 </div>
 
-<footer>Bàdminton — Generat automàticament a partir del fitxer Excel</footer>
+<footer id="footer-text"></footer>
 
 <script>
-const MONTH_NAMES = ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'];
-const DAY_NAMES = ['Dg','Dl','Dt','Dc','Dj','Dv','Ds'];
+// ── TRANSLATIONS ──
+const T = {
+  ca: {
+    heroSubtitle: 'Puja el fitxer Excel per generar els calendaris de tots els jugadors',
+    heroLoaded: (n, from, to) => `${n} jugadors · ${from} – ${to}`,
+    uploadTitle: 'Puja el calendari Excel',
+    uploadSub: 'Fes clic o arrossega el fitxer aquí',
+    uploadHint: 'Format esperat: dates a la <strong>columna B</strong>, franges horàries (p.ex. 19:30, 20:15…) a la primera fila de cada bloc setmanal.',
+    loading: 'Llegint el fitxer…',
+    changeFile: 'Canviar fitxer',
+    pickerLabel: 'Selecciona el teu nom',
+    searchPlaceholder: 'Busca el teu nom…',
+    back: 'Tornar',
+    downloadBtn: 'Descarregar .ics',
+    sessionCount: (n, months, y) => `${n} sessions · ${months} ${y}`,
+    with: 'Amb',
+    noPartner: 'Sense parella assignada',
+    court: 'Pista',
+    gcalTitle: '<strong>Com afegir a Google Calendar (i sobreescriure si canvia):</strong>',
+    gcalSteps: [
+      'Fes clic a <strong>Descarregar .ics</strong> per baixar el fitxer',
+      'Obre <a href="https://calendar.google.com" target="_blank" style="color:#1a73e8">calendar.google.com</a> → icona ⚙️ → <strong>Configuració</strong>',
+      'Al menú esquerre: <strong>Importa i exporta</strong> → <strong>Importa</strong>',
+      'Selecciona el fitxer <code>.ics</code> descarregat i prem <strong>Importar</strong>'
+    ],
+    gcalOverwrite: '🔄 <strong>Si el calendari canvia</strong>, torna a descarregar l\'arxiu i repeteix la importació — Google Calendar detectarà els mateixos events (per ID) i els <strong>actualitzarà automàticament</strong> sense duplicar-los.',
+    gcalIos: '📱 A l\'iPhone o iPad, simplement obre el fitxer <code>.ics</code> i prem <strong>Afegir tots</strong> — si ja tenies els events importats anteriorment, els <strong>sobreescriurà automàticament</strong> gràcies al mateix ID, sense duplicats.',
+    footer: 'Bàdminton — Generat automàticament a partir del fitxer Excel',
+    errorEmpty: 'No s\'han trobat sessions al fitxer. Comprova que el format sigui el correcte.',
+    months: ['Gener','Febrer','Març','Abril','Maig','Juny','Juliol','Agost','Setembre','Octubre','Novembre','Desembre'],
+    days: ['Dg','Dl','Dt','Dc','Dj','Dv','Ds'],
+    icsCalName: (name) => `Bàdminton ${name}`,
+    icsDesc: (others) => others.length ? 'Amb: ' + others.join(', ') : '',
+  },
+  es: {
+    heroSubtitle: 'Sube el archivo Excel para generar los calendarios de todos los jugadores',
+    heroLoaded: (n, from, to) => `${n} jugadores · ${from} – ${to}`,
+    uploadTitle: 'Sube el calendario Excel',
+    uploadSub: 'Haz clic o arrastra el archivo aquí',
+    uploadHint: 'Formato esperado: fechas en la <strong>columna B</strong>, franjas horarias (ej. 19:30, 20:15…) en la primera fila de cada bloque semanal.',
+    loading: 'Leyendo el archivo…',
+    changeFile: 'Cambiar archivo',
+    pickerLabel: 'Selecciona tu nombre',
+    searchPlaceholder: 'Busca tu nombre…',
+    back: 'Volver',
+    downloadBtn: 'Descargar .ics',
+    sessionCount: (n, months, y) => `${n} sesiones · ${months} ${y}`,
+    with: 'Con',
+    noPartner: 'Sin pareja asignada',
+    court: 'Pista',
+    gcalTitle: '<strong>Cómo añadir a Google Calendar (y sobreescribir si cambia):</strong>',
+    gcalSteps: [
+      'Haz clic en <strong>Descargar .ics</strong> para bajar el archivo',
+      'Abre <a href="https://calendar.google.com" target="_blank" style="color:#1a73e8">calendar.google.com</a> → icono ⚙️ → <strong>Configuración</strong>',
+      'En el menú izquierdo: <strong>Importar y exportar</strong> → <strong>Importar</strong>',
+      'Selecciona el archivo <code>.ics</code> descargado y pulsa <strong>Importar</strong>'
+    ],
+    gcalOverwrite: '🔄 <strong>Si el calendario cambia</strong>, vuelve a descargar el archivo y repite la importación — Google Calendar detectará los mismos eventos (por ID) y los <strong>actualizará automáticamente</strong> sin duplicarlos.',
+    gcalIos: '📱 En iPhone o iPad, simplemente abre el archivo <code>.ics</code> y pulsa <strong>Añadir todos</strong> — si ya tenías los eventos importados anteriormente, los <strong>sobreescribirá automáticamente</strong> gracias al mismo ID, sin duplicados.',
+    footer: 'Bàdminton — Generado automáticamente a partir del archivo Excel',
+    errorEmpty: 'No se han encontrado sesiones en el archivo. Comprueba que el formato sea el correcto.',
+    months: ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+    days: ['Do','Lu','Ma','Mi','Ju','Vi','Sá'],
+    icsCalName: (name) => `Bádminton ${name}`,
+    icsDesc: (others) => others.length ? 'Con: ' + others.join(', ') : '',
+  }
+};
+
+let lang = 'ca';
 let SESSIONS = [];
 let currentPlayer = null;
 
+function setLang(l) {
+  lang = l;
+  try { localStorage.setItem('badminton-lang', l); } catch(e) {}
+  document.documentElement.lang = l;
+  document.getElementById('btn-ca').classList.toggle('active', l === 'ca');
+  document.getElementById('btn-es').classList.toggle('active', l === 'es');
+  applyTranslations();
+}
+
+function applyTranslations() {
+  const t = T[lang];
+  // Hero
+  if (!SESSIONS.length) {
+    document.getElementById('hero-subtitle').textContent = t.heroSubtitle;
+  } else {
+    const dates = SESSIONS.map(s => s.date).sort();
+    document.getElementById('hero-subtitle').textContent =
+      t.heroLoaded(new Set(SESSIONS.map(s=>s.name)).size, formatDate(dates[0]), formatDate(dates[dates.length-1]));
+  }
+  // Upload
+  document.getElementById('upload-title').textContent = t.uploadTitle;
+  document.getElementById('upload-sub').textContent = t.uploadSub;
+  document.getElementById('upload-hint').innerHTML = t.uploadHint;
+  document.getElementById('loading-text').textContent = t.loading;
+  // Picker
+  document.getElementById('change-btn').textContent = t.changeFile;
+  document.getElementById('picker-label').textContent = t.pickerLabel;
+  document.getElementById('search').placeholder = t.searchPlaceholder;
+  // Cal panel
+  document.getElementById('back-label').textContent = t.back;
+  document.getElementById('btn-download-label').textContent = t.downloadBtn;
+  document.getElementById('footer-text').textContent = t.footer;
+  // GCal hint
+  document.getElementById('gcal-title').innerHTML = t.gcalTitle;
+  const ol = document.getElementById('gcal-steps');
+  ol.innerHTML = '';
+  t.gcalSteps.forEach(s => { const li = document.createElement('li'); li.innerHTML = s; ol.appendChild(li); });
+  document.getElementById('gcal-note-overwrite').innerHTML = t.gcalOverwrite;
+  document.getElementById('gcal-note-ios').innerHTML = t.gcalIos;
+  // Re-render panel if open
+  if (currentPlayer) renderPanel(currentPlayer);
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${d.getDate()} ${T[lang].months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// ── INIT ──
+(function init() {
+  try { const saved = localStorage.getItem('badminton-lang'); if (saved === 'ca' || saved === 'es') lang = saved; } catch(e) {}
+  setLang(lang);
+})();
+
+// ── DRAG & DROP ──
 const zone = document.getElementById('upload-zone');
 zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
 zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
@@ -213,13 +327,13 @@ function handleFile(file) {
   reader.onload = function(ev) {
     try {
       const sessions = parseExcel(new Uint8Array(ev.target.result));
-      if (!sessions.length) throw new Error('No s\'han trobat sessions al fitxer. Comprova que el format sigui el correcte.');
+      if (!sessions.length) throw new Error(T[lang].errorEmpty);
       SESSIONS = sessions;
       document.getElementById('file-name').textContent = file.name;
       const dates = sessions.map(s => s.date).sort();
       const playerCount = new Set(sessions.map(s => s.name)).size;
       document.getElementById('hero-subtitle').textContent =
-        `${playerCount} jugadors · ${formatDate(dates[0])} – ${formatDate(dates[dates.length-1])}`;
+        T[lang].heroLoaded(playerCount, formatDate(dates[0]), formatDate(dates[dates.length-1]));
       buildPlayerGrid();
       showOnly('picker-screen');
     } catch(e) {
@@ -233,11 +347,7 @@ function handleFile(file) {
   reader.readAsArrayBuffer(file);
 }
 
-function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
-}
-
+// ── EXCEL PARSER ──
 function parseExcel(data) {
   const wb = XLSX.read(data, { type: 'array', cellDates: true });
   const ws = wb.Sheets[wb.SheetNames[0]];
@@ -252,16 +362,12 @@ function parseExcel(data) {
     if (v === null || v === undefined) return false;
     return /^\d{1,2}:\d{2}(:\d{2})?$/.test(String(v).trim());
   }
-
   function normalizeTime(v) {
     const m = String(v).trim().match(/^(\d{1,2}):(\d{2})/);
     return m ? `${m[1].padStart(2,'0')}:${m[2]}` : null;
   }
-
   function parseAnyDate(raw, formatted) {
-    // Native Date
     if (raw instanceof Date && !isNaN(raw)) return raw;
-    // Excel serial
     if (typeof raw === 'number' && raw > 40000) {
       const d = XLSX.SSF.parse_date_code(raw); if (d) return new Date(d.y, d.m-1, d.d);
     }
@@ -270,19 +376,12 @@ function parseExcel(data) {
       const s = String(val).trim();
       if (!s || isTime(s) || /^\d{1,2}(\.\d+)?$/.test(s)) continue;
       let m;
-      // YYYY-MM-DD (with optional time)
       m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
       if (m) return new Date(+m[1], +m[2]-1, +m[3]);
-      // DD-MMM-YY or DD-MMM-YYYY  e.g. "15-Apr-26"
       m = s.match(/^(\d{1,2})[- ]([A-Za-z]{3})[- ](\d{2,4})$/);
-      if (m) {
-        const mo = MON[m[2].toLowerCase()];
-        if (mo !== undefined) { let yr = +m[3]; if (yr < 100) yr += 2000; return new Date(yr, mo, +m[1]); }
-      }
-      // DD/MM/YYYY
+      if (m) { const mo = MON[m[2].toLowerCase()]; if (mo !== undefined) { let yr = +m[3]; if (yr < 100) yr += 2000; return new Date(yr, mo, +m[1]); } }
       m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
       if (m) return new Date(+m[3], +m[2]-1, +m[1]);
-      // Last resort
       const d = new Date(s);
       if (!isNaN(d) && d.getFullYear() > 2000) return d;
     }
@@ -292,20 +391,14 @@ function parseExcel(data) {
   let i = 0;
   while (i < rows.length) {
     const row = rows[i], rawRow = rawRows[i];
-    // Time header row
     if (isTime(row[2]) || isTime(rawRow[2])) {
       curTimes = [];
-      TIME_COLS.forEach(tc => {
-        const tv = isTime(row[tc]) ? row[tc] : (isTime(rawRow[tc]) ? rawRow[tc] : null);
-        if (tv) { const t = normalizeTime(tv); if (t) curTimes.push({ col: tc, time: t }); }
-      });
+      TIME_COLS.forEach(tc => { const tv = isTime(row[tc]) ? row[tc] : (isTime(rawRow[tc]) ? rawRow[tc] : null); if (tv) { const t = normalizeTime(tv); if (t) curTimes.push({ col: tc, time: t }); } });
       i++; continue;
     }
-    // Date row
     const dateVal = parseAnyDate(rawRow[1], row[1]);
     if (dateVal) {
-      const prows = [row];
-      let j = i + 1;
+      const prows = [row]; let j = i + 1;
       while (j < rows.length) {
         if (parseAnyDate(rawRows[j][1], rows[j][1])) break;
         if (isTime(rows[j][2]) || isTime(rawRows[j][2])) break;
@@ -313,13 +406,8 @@ function parseExcel(data) {
       }
       curTimes.forEach(({ col, time }) => {
         const names = [];
-        prows.forEach(pr => {
-          [col, col+2].forEach(c => { const v = pr[c]; if (v && String(v).trim() && !isTime(String(v))) names.push(String(v).trim()); });
-        });
-        names.forEach(name => out.push({
-          date: `${dateVal.getFullYear()}-${String(dateVal.getMonth()+1).padStart(2,'0')}-${String(dateVal.getDate()).padStart(2,'0')}`,
-          y: dateVal.getFullYear(), m: dateVal.getMonth(), d: dateVal.getDate(), time, name
-        }));
+        prows.forEach(pr => { [col, col+2].forEach(c => { const v = pr[c]; if (v && String(v).trim() && !isTime(String(v))) names.push(String(v).trim()); }); });
+        names.forEach(name => out.push({ date: `${dateVal.getFullYear()}-${String(dateVal.getMonth()+1).padStart(2,'0')}-${String(dateVal.getDate()).padStart(2,'0')}`, y: dateVal.getFullYear(), m: dateVal.getMonth(), d: dateVal.getDate(), time, name }));
       });
       i = j; continue;
     }
@@ -328,24 +416,20 @@ function parseExcel(data) {
   return out;
 }
 
+// ── PLAYER GRID ──
 function buildPlayerGrid() {
   const players = [...new Set(SESSIONS.map(s => s.name))].sort();
   const grid = document.getElementById('player-grid');
   grid.innerHTML = '';
   players.forEach(name => {
     const btn = document.createElement('button');
-    btn.className = 'player-btn';
-    btn.textContent = name;
-    btn.dataset.name = name.toLowerCase();
+    btn.className = 'player-btn'; btn.textContent = name; btn.dataset.name = name.toLowerCase();
     btn.onclick = () => selectPlayer(name);
     grid.appendChild(btn);
   });
   const search = document.getElementById('search');
   search.value = '';
-  search.oninput = function() {
-    const q = this.value.toLowerCase();
-    document.querySelectorAll('.player-btn').forEach(b => b.classList.toggle('hidden', !b.dataset.name.includes(q)));
-  };
+  search.oninput = function() { const q = this.value.toLowerCase(); document.querySelectorAll('.player-btn').forEach(b => b.classList.toggle('hidden', !b.dataset.name.includes(q))); };
 }
 
 function selectPlayer(name) {
@@ -367,18 +451,19 @@ function resetToUpload() {
   SESSIONS = []; currentPlayer = null;
   document.getElementById('file-input').value = '';
   document.getElementById('error-box').style.display = 'none';
-  document.getElementById('hero-subtitle').textContent = 'Puja el fitxer Excel per generar els calendaris de tots els jugadors';
+  document.getElementById('hero-subtitle').textContent = T[lang].heroSubtitle;
   showOnly('upload-screen');
 }
 
 function initials(name) { return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase(); }
 
 function renderPanel(name) {
+  const t = T[lang];
   const mine = SESSIONS.filter(s => s.name === name);
   document.getElementById('p-avatar').textContent = initials(name);
   document.getElementById('p-name').textContent = name;
-  const months = [...new Set(mine.map(s => MONTH_NAMES[s.m]))];
-  document.getElementById('p-count').textContent = `${mine.length} sessions · ${months.join(' – ')} ${mine[0]?.y || ''}`;
+  const months = [...new Set(mine.map(s => t.months[s.m]))];
+  document.getElementById('p-count').textContent = t.sessionCount(mine.length, months.join(' – '), mine[0]?.y || '');
 
   const byMonth = {};
   mine.forEach(s => { const mk = `${s.y}-${s.m}`; if (!byMonth[mk]) byMonth[mk] = { y: s.y, m: s.m, sessions: [] }; byMonth[mk].sessions.push(s); });
@@ -387,29 +472,34 @@ function renderPanel(name) {
   list.innerHTML = '';
   Object.values(byMonth).sort((a,b) => a.y-b.y || a.m-b.m).forEach(({ y, m, sessions }) => {
     const block = document.createElement('div'); block.className = 'month-block';
-    const title = document.createElement('div'); title.className = 'month-title'; title.textContent = `${MONTH_NAMES[m]} ${y}`; block.appendChild(title);
+    const title = document.createElement('div'); title.className = 'month-title'; title.textContent = `${t.months[m]} ${y}`; block.appendChild(title);
     sessions.sort((a,b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time)).forEach(s => {
       const d = new Date(s.date + 'T00:00:00');
       const others = SESSIONS.filter(x => x.date === s.date && x.time === s.time && x.name !== name).map(x => x.name);
       const row = document.createElement('div'); row.className = 'session-row';
       row.innerHTML = `
-        <div class="session-date"><div class="day-num">${d.getDate()}</div><div class="day-name">${DAY_NAMES[d.getDay()]}</div></div>
+        <div class="session-date"><div class="day-num">${d.getDate()}</div><div class="day-name">${t.days[d.getDay()]}</div></div>
         <div class="session-divider"></div>
         <div class="session-info">
           <div class="session-time">${s.time}h</div>
-          <div class="session-others">${others.length ? 'Amb: '+others.join(', ') : 'Sense parella assignada'}</div>
+          <div class="session-others">${others.length ? t.with+': '+others.join(', ') : t.noPartner}</div>
         </div>
-        <div class="session-badge">Pista</div>`;
+        <div class="session-badge">${t.court}</div>`;
       block.appendChild(row);
     });
     list.appendChild(block);
   });
 }
 
+// ── ICS ──
+const VTIMEZONE = `BEGIN:VTIMEZONE\r\nTZID:Europe/Madrid\r\nBEGIN:STANDARD\r\nTZOFFSETFROM:+0200\r\nTZOFFSETTO:+0100\r\nTZNAME:CET\r\nDTSTART:19701025T030000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nTZOFFSETFROM:+0100\r\nTZOFFSETTO:+0200\r\nTZNAME:CEST\r\nDTSTART:19700329T020000\r\nRRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=3\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE\r\n`;
+
 function buildIcs(name) {
+  const t = T[lang];
   const mine = SESSIONS.filter(s => s.name === name);
   const pad = n => String(n).padStart(2,'0');
-  let ics = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Badminton//EN\r\nCALSCALE:GREGORIAN\r\nX-WR-CALNAME:Bàdminton ${name}\r\n`;
+  let ics = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Badminton//EN\r\nCALSCALE:GREGORIAN\r\nX-WR-CALNAME:${t.icsCalName(name)}\r\nX-WR-TIMEZONE:Europe/Madrid\r\n`;
+  ics += VTIMEZONE;
   mine.forEach(s => {
     const d = new Date(s.date + 'T00:00:00');
     const ds = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
@@ -419,7 +509,7 @@ function buildIcs(name) {
     const dtend = `${ds}T${pad(Math.floor(endTotal/60))}${pad(endTotal%60)}00`;
     const others = SESSIONS.filter(x => x.date===s.date && x.time===s.time && x.name!==name).map(x=>x.name);
     const uid = `badminton-${ds}-${pad(hh)}${pad(mm)}-${name.replace(/\s+/g,'').toLowerCase()}@badminton`;
-    ics += `BEGIN:VEVENT\r\nUID:${uid}\r\nSUMMARY:Bàdminton 🏸\r\nDTSTART:${dtstart}\r\nDTEND:${dtend}\r\nDESCRIPTION:${others.length ? 'Amb: '+others.join(', ') : ''}\r\nEND:VEVENT\r\n`;
+    ics += `BEGIN:VEVENT\r\nUID:${uid}\r\nSUMMARY:Bàdminton 🏸\r\nDTSTART;TZID=Europe/Madrid:${dtstart}\r\nDTEND;TZID=Europe/Madrid:${dtend}\r\nDESCRIPTION:${t.icsDesc(others)}\r\nEND:VEVENT\r\n`;
   });
   return ics + 'END:VCALENDAR';
 }
